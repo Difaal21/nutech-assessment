@@ -37,7 +37,9 @@ class UserRepository {
     } catch (error) {
       logger.log(ctx, error, "getOneUserByUniqueField");
       return wrapper.error({ message: error.message, items: error });
-    };
+    } finally {
+      conn.release();
+    }
   };
 
   async saveUser(payload) {
@@ -55,7 +57,9 @@ class UserRepository {
     } catch (error) {
       logger.log(ctx, error.message, "saveUser");
       return wrapper.error({ message: error.message, items: error });
-    };
+    } finally {
+      conn.release();
+    }
   };
 
   async updateUserByID(id, payload) {
@@ -84,6 +88,8 @@ class UserRepository {
     } catch (error) {
       logger.log(ctx, error.message, "updateUserByID");
       return wrapper.error({ message: error.message, items: error });
+    } finally {
+      conn.release();
     }
   }
 }
