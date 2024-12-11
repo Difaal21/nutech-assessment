@@ -8,7 +8,16 @@ const init = (server) => {
     });
 
     server.use((error, req, res, next) => {
-        return new httpResponse.NotFound().setMessage("Page not found").send(res);
+
+        if (error.code == 400 || error.type == "entity.parse.failed") {
+            return new httpResponse.BadRequest().setMessage("Unprocessable entity").send(res);
+        }
+
+        if (error.code == 404) {
+            return new httpResponse.NotFound().setMessage("Page not found").send(res);
+        }
+
+        return new httpResponse.InternalServerError().setMessage("Unexpected error").send(res);
     });
 };
 
