@@ -19,6 +19,11 @@ import BannerService from "../modules/banners/service.js";
 import BannerHttpHandler from "../modules/banners/http_handler.js";
 import bannerRoutes from "../routes/banners.js";
 
+import ServiceRepository from "../modules/services/repository.js";
+import ServiceService from "../modules/services/service.js";
+import ServiceHttpHandler from "../modules/services/http_handler.js";
+import serviceRoutes from "../routes/services.js";
+
 async function init() {
   const app = express();
 
@@ -42,6 +47,11 @@ async function init() {
   const bannerService = new BannerService(bannerRepository);
   const bannerHttpHandler = new BannerHttpHandler(bannerService);
   bannerRoutes.init(app, bannerHttpHandler);
+
+  const serviceRepository = new ServiceRepository(db);
+  const serviceService = new ServiceService(serviceRepository);
+  const serviceHttpHandler = new ServiceHttpHandler(serviceService);
+  serviceRoutes.init(app, serviceHttpHandler);
 
   routes.init(app);
   return app;
