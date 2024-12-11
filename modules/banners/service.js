@@ -1,5 +1,6 @@
 
 import httpResponse from "../../helpers/http_responses/index.js";
+import exceptions from "../../helpers/utils/exceptions.js";
 
 class BannerService {
   constructor(repo) {
