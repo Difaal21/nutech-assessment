@@ -7,7 +7,7 @@ class BannerService {
     this.repo = repo;
   };
 
-  getBanners = async (payload) => {
+  getBanners = async () => {
     const ctx = `${this.ctx}.getBanners`;
 
     const banners = await this.repo.getBanners();
