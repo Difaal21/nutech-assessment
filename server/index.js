@@ -14,12 +14,16 @@ import UserService from "../modules/users/service.js";
 import UserHttpHandler from "../modules/users/http_handler.js";
 import userRoutes from "../routes/users.js";
 
+import BannerRepository from "../modules/banners/repository.js";
+import BannerService from "../modules/banners/service.js";
+import BannerHttpHandler from "../modules/banners/http_handler.js";
+import bannerRoutes from "../routes/banners.js";
+
 async function init() {
   const app = express();
 
   const db = mysqlConnection.createPool();
   await mysqlConnection.checkConnection(db);
-  const conn = await db.getConnection(db);
 
   app.use(cors());
   app.use(helmet());
@@ -29,11 +33,16 @@ async function init() {
   const imagesPath = path.join(__dirname, '../images/profiles');
   app.use('/images/profiles', express.static(imagesPath));
 
-  const userRepository = new UserRepository(conn);
+  const userRepository = new UserRepository(db);
   const userService = new UserService(userRepository);
   const userHttpHandler = new UserHttpHandler(userService);
-
   userRoutes.init(app, userHttpHandler);
+
+  const bannerRepository = new BannerRepository(db);
+  const bannerService = new BannerService(bannerRepository);
+  const bannerHttpHandler = new BannerHttpHandler(bannerService);
+  bannerRoutes.init(app, bannerHttpHandler);
+
   routes.init(app);
   return app;
 }

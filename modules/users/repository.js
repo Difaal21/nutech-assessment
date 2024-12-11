@@ -21,41 +21,47 @@ class UserRepository {
   };
 
   async getUserByUniqueField(field, value) {
+    const ctx = `${this.ctx}.getUserByUniqueField`;
+    const conn = await this.db.getConnection();
     try {
       let query = baseQueryUser;
-
       if (field && value) {
         query += ` WHERE ${field} = ?`;
       }
 
-      const [results] = await this.db.query(query, [value]);
+      const [results] = await conn.query(query, [value]);
       if (results.length == 0) {
         return wrapper.error({ exception: exceptions.NOT_FOUND });
       }
       return wrapper.data({ items: results[0] });
     } catch (error) {
-      logger.log(this.ctx, error, "getOneUserByUniqueField");
+      logger.log(ctx, error, "getOneUserByUniqueField");
       return wrapper.error({ message: error.message, items: error });
     };
   };
 
   async saveUser(payload) {
+    const ctx = `${this.ctx}.saveUser`;
+    const conn = await this.db.getConnection();
     try {
       const query = `
         INSERT INTO users (first_name, last_name, email, password, created_at)
         VALUES (?, ?, ?, ?, ?)
       `;
       const { first_name, last_name, email, password, created_at } = payload;
-      const [result] = await this.db.query(query, [first_name, last_name, email, password, created_at]);
+      const [result] = await conn.query(query, [first_name, last_name, email, password, created_at]);
 
       return wrapper.data({ items: result.insertId });
     } catch (error) {
-      logger.log(this.ctx, error.message, "saveUser");
+      logger.log(ctx, error.message, "saveUser");
       return wrapper.error({ message: error.message, items: error });
     };
   };
 
   async updateUserByID(id, payload) {
+    const ctx = `${this.ctx}.updateUserByID`;
+    const conn = await this.db.getConnection();
+
     try {
       const fields = [];
       const values = [];
@@ -73,10 +79,10 @@ class UserRepository {
 
       values.push(id);
 
-      const [result] = await this.db.execute(query, values);
+      const [result] = await conn.execute(query, values);
       return wrapper.data({ items: result.affectedRows });
     } catch (error) {
-      logger.log(this.ctx, error.message, "updateUserByID");
+      logger.log(ctx, error.message, "updateUserByID");
       return wrapper.error({ message: error.message, items: error });
     }
   }

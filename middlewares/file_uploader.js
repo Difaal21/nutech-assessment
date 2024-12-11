@@ -24,10 +24,7 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
-const upload = multer({
-  storage,
-  fileFilter
-}).single('file');
+const upload = multer({ storage, fileFilter, limits: { fileSize: 2 * 1024 * 1024 } }).single('file');
 
 const fileUploader = (req, res, next) => {
   upload(req, res, (err) => {
@@ -38,7 +35,6 @@ const fileUploader = (req, res, next) => {
     } else if (!req.file) {
       return new httpResponse.BadRequest().setMessage("Format Image tidak sesuai").send(res);
     }
-
     next()
   });
 };
