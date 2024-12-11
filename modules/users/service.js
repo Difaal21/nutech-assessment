@@ -32,6 +32,7 @@ class UserService {
             email: payload.email,
             password: password,
             created_at: new Date(),
+            balance: 0,
         };
 
         const userId = await this.repo.saveUser(newUser);

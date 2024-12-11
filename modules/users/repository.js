@@ -46,15 +46,27 @@ class UserRepository {
     const ctx = `${this.ctx}.saveUser`;
     const conn = await this.db.getConnection();
     try {
-      const query = `
+      await conn.beginTransaction();
+
+      const queryUser = `
         INSERT INTO users (first_name, last_name, email, password, created_at)
         VALUES (?, ?, ?, ?, ?)
       `;
-      const { first_name, last_name, email, password, created_at } = payload;
-      const [result] = await conn.query(query, [first_name, last_name, email, password, created_at]);
+      const { first_name, last_name, email, password, created_at, balance } = payload;
+      const [resultUser] = await conn.query(queryUser, [first_name, last_name, email, password, created_at]);
 
-      return wrapper.data({ items: result.insertId });
+      const userId = resultUser.insertId;
+
+      const queryBalance = `
+        INSERT INTO users_balance (user_id, balance)
+        VALUES (?, ?)
+      `;
+
+      const [resultBalance] = await conn.query(queryBalance, [userId, balance]);
+      await conn.commit();
+      return wrapper.data({ items: userId });
     } catch (error) {
+      await conn.rollback();
       logger.log(ctx, error.message, "saveUser");
       return wrapper.error({ message: error.message, items: error });
     } finally {

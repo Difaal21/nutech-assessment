@@ -24,6 +24,11 @@ import ServiceService from "../modules/services/service.js";
 import ServiceHttpHandler from "../modules/services/http_handler.js";
 import serviceRoutes from "../routes/services.js";
 
+import TransactionRepository from "../modules/transactions/repository.js";
+import TransactionService from "../modules/transactions/service.js";
+import TransactionHttpHandler from "../modules/transactions/http_handler.js";
+import transactionRoutes from "../routes/transactions.js";
+
 async function init() {
   const app = express();
 
@@ -52,6 +57,11 @@ async function init() {
   const serviceService = new ServiceService(serviceRepository);
   const serviceHttpHandler = new ServiceHttpHandler(serviceService);
   serviceRoutes.init(app, serviceHttpHandler);
+
+  const transactionRepository = new TransactionRepository(db);
+  const transactionService = new TransactionService(transactionRepository);
+  const transactionHttpHandler = new TransactionHttpHandler(transactionService);
+  transactionRoutes.init(app, transactionHttpHandler);
 
   routes.init(app);
   return app;
