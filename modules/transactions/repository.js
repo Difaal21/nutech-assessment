@@ -33,8 +33,8 @@ class TransactionRepository {
     try {
       await conn.beginTransaction();
 
-      let querySelect = `SELECT balance FROM users_balance WHERE user_id = ? FOR UPDATE`;
-      const [results] = await conn.query(querySelect, [userId]);
+      let selectBalanceQuery = `SELECT balance FROM users_balance WHERE user_id = ? FOR UPDATE`;
+      const [results] = await conn.query(selectBalanceQuery, [userId]);
       if (results.length == 0) {
         await conn.rollback();
         logger.log(ctx, "User not found", "conn.query");
@@ -44,8 +44,15 @@ class TransactionRepository {
       const currentBalance = parseFloat(results[0].balance);
       const newBalance = currentBalance + parseFloat(amount);
 
-      let queryUpdate = `UPDATE users_balance SET balance = ? WHERE user_id = ?`;
-      await conn.query(queryUpdate, [newBalance, userId]);
+      let updateBalanceQuery = `UPDATE users_balance SET balance = ? WHERE user_id = ?`;
+      await conn.query(updateBalanceQuery, [newBalance, userId]);
+
+      let insertTransactionQuery = `INSERT INTO transactions (invoice_number, user_id, transaction_type, description, total_amount, created_on) VALUES (?, ?, ?, ?, ?, ?)`;
+      const invoiceNumber = `INV-${userId}-${new Date().getTime()}`;
+      const transactionType = 'TOPUP';
+      const description = 'Top Up balance';
+      const createdOn = new Date();
+      await conn.query(insertTransactionQuery, [invoiceNumber, userId, transactionType, description, amount, createdOn]);
 
       await conn.commit();
       return wrapper.data({ message: 'Balance updated successfully', items: newBalance });
