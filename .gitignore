@@ -160,7 +160,7 @@ dist
 .scannerwork
 
 # image files
-images/
+images/profiles/*
 
 # vscode config
 .vscode/
