@@ -11,4 +11,10 @@ const userTransaction = joi.object({
   service_code: joi.string().required()
 });
 
-export default { topUpUserBalance, userTransaction }
+const getUserTransactionHistory = joi.object({
+  limit: joi.number().integer().min(1).optional(),
+  offset: joi.number().integer().min(1).optional()
+}).with('limit', 'offset').with('offset', 'limit');
+
+
+export default { topUpUserBalance, userTransaction, getUserTransactionHistory }

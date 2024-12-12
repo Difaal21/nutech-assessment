@@ -38,6 +38,18 @@ class TransactionHttpHandler {
     const result = await this.service.userTransaction(userId, payload);
     return result.send(res);
   }
+
+  getUserTransactionHistory = async (req, res) => {
+    const { userId } = req;
+
+    const validatePayload = validator.isValid(req.query, payloadSchema.getUserTransactionHistory);
+    if (validatePayload.error) {
+      return new httpResponse.BadRequest().setMessage(validatePayload.items[0].message).send(res);
+    };
+
+    const result = await this.service.getUserTransactionHistory(userId, req.query);
+    return result.send(res);
+  }
 }
 
 

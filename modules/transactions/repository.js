@@ -78,10 +78,40 @@ class TransactionRepository {
       let updateBalanceQuery = `UPDATE users_balance SET balance = ? WHERE user_id = ?`;
       await conn.query(updateBalanceQuery, [balance, userId]);
       await conn.commit();
-      return wrapper.data();
+      return wrapper.data({});
     } catch (error) {
       await conn.rollback();
       logger.log(ctx, error.message, "userTransaction");
+      return wrapper.error({ message: error.message });
+    } finally {
+      conn.release();
+    }
+  }
+
+  getUserTransactionHistory = async (userId, limit, offset) => {
+    const ctx = `${this.ctx}.getUserTransactionHistory`;
+    const conn = await this.db.getConnection();
+
+    try {
+      let query = `
+        SELECT t.id, t.invoice_number, t.user_id, t.transaction_type, t.description, t.total_amount, t.created_on
+        FROM transactions t
+        WHERE t.user_id = ?
+        ORDER BY t.created_on DESC
+      `;
+
+      if (limit <= 1 && offset <= 0) {
+        query += ` LIMIT ? OFFSET ?`;
+      }
+
+      const [results] = await conn.query(query, [userId, limit, offset]);
+      if (results.length == 0) {
+        return wrapper.error({ exception: exceptions.NOT_FOUND });
+      }
+
+      return wrapper.data({ items: results });
+    } catch (error) {
+      logger.log(ctx, error.message, "getUserTransactionHistory");
       return wrapper.error({ message: error.message });
     } finally {
       conn.release();

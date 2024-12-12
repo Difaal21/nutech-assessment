@@ -109,6 +109,39 @@ class TransactionService {
 
     return new httpResponse.OK().setData(response).setMessage("Transaksi berhasil");
   };
+
+  getUserTransactionHistory = async (userId, queryParams) => {
+    const ctx = `${this.ctx}.getUserTransactionHistory`;
+
+    const limit = parseInt(queryParams.limit);
+    const offset = (parseInt(queryParams.offset) - 1) * limit;
+
+    const transactionHistory = await this.repo.getUserTransactionHistory(userId, limit, offset);
+    if (transactionHistory.error) {
+      if (transactionHistory.exception == exceptions.NOT_FOUND) {
+        return new httpResponse.NotFound().setMessage("Data tidak ditemukan");
+      }
+
+      logger.log(ctx, transactionHistory.message, "this.repo.getUserTransactionHistory");
+      return new httpResponse.InternalServerError().setMessage("Terjadi kesalahan pada server");
+    }
+
+    const response = {
+      offset: offset + 1,
+      limit: limit,
+      records: transactionHistory.items.map(item => {
+        return {
+          invoice_number: item.invoice_number,
+          transaction_type: item.transaction_type,
+          description: item.description,
+          total_amount: parseFloat(item.total_amount),
+          created_on: item.created_on
+        }
+      })
+    }
+
+    return new httpResponse.OK().setData(response).setMessage("Get History Berhasil");
+  }
 }
 
 export default TransactionService;
