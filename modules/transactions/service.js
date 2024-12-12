@@ -4,9 +4,10 @@ import exceptions from "../../helpers/utils/exceptions.js";
 import logger from "../../helpers/utils/logger.js";
 
 class TransactionService {
-  constructor(repo) {
+  constructor(repo, serviceRepo) {
     this.ctx = this.constructor.name;
     this.repo = repo;
+    this.serviceRepo = serviceRepo;
   };
 
   getUserBalance = async (userId) => {
@@ -48,6 +49,66 @@ class TransactionService {
 
     return new httpResponse.OK().setData(response).setMessage("Sukses");
   }
+
+  userTransaction = async (userId, payload) => {
+    const ctx = `${this.ctx}.userTransaction`;
+
+    const service = await this.serviceRepo.getServiceByCode(payload.service_code);
+    if (service.error) {
+      if (service.exception == exceptions.NOT_FOUND) {
+        return new httpResponse.NotFound().setMessage("Service ataus Layanan tidak ditemukan");
+      }
+
+      logger.log(ctx, service.message, "this.repo.getServiceByCode");
+      return new httpResponse.InternalServerError().setMessage("Terjadi kesalahan pada server");
+    }
+
+    const userBalance = await this.repo.getUserBalance(userId);
+    if (userBalance.error) {
+      if (userBalance.exception == exceptions.NOT_FOUND) {
+        return new httpResponse.NotFound().setMessage("Data tidak ditemukan");
+      }
+
+      logger.log(ctx, userBalance.message, "this.repo.getServiceByCode");
+      return new httpResponse.InternalServerError().setMessage("Terjadi kesalahan pada server");
+    }
+
+    const balance = parseFloat(userBalance.items.balance);
+    const servicePrice = parseFloat(service.items.price);
+    if (balance < servicePrice) {
+      return new httpResponse.Forbidden().setMessage("Saldo tidak cukup");
+    }
+
+    const newBalance = balance - servicePrice;
+    const payloadTransaction = {
+      userId: userId,
+      balance: newBalance,
+      transaction: {
+        invoiceNumber: `INV-${userId}-${new Date().getTime()}`,
+        type: 'PAYMENT',
+        amount: servicePrice,
+        description: service.items.name,
+        createdOn: new Date()
+      }
+    };
+
+    const transaction = await this.repo.userTransaction(payloadTransaction);
+    if (transaction.error) {
+      logger.log(ctx, transaction.message, "this.repo.userTransaction");
+      return new httpResponse.InternalServerError().setMessage("Terjadi kesalahan pada server");
+    }
+
+    const response = {
+      invoice_number: payloadTransaction.transaction.invoiceNumber,
+      service_code: service.items.code,
+      service_name: service.items.name,
+      transaction_type: payloadTransaction.transaction.type,
+      total_amount: servicePrice,
+      created_on: payloadTransaction.transaction.createdOn
+    };
+
+    return new httpResponse.OK().setData(response).setMessage("Transaksi berhasil");
+  };
 }
 
 export default TransactionService;

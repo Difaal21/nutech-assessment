@@ -59,7 +59,7 @@ async function init() {
   serviceRoutes.init(app, serviceHttpHandler);
 
   const transactionRepository = new TransactionRepository(db);
-  const transactionService = new TransactionService(transactionRepository);
+  const transactionService = new TransactionService(transactionRepository, serviceRepository);
   const transactionHttpHandler = new TransactionHttpHandler(transactionService);
   transactionRoutes.init(app, transactionHttpHandler);
 

@@ -7,4 +7,8 @@ const topUpUserBalance = joi.object({
   })
 });
 
-export default { topUpUserBalance }
+const userTransaction = joi.object({
+  service_code: joi.string().required()
+});
+
+export default { topUpUserBalance, userTransaction }

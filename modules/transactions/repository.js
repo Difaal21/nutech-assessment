@@ -58,8 +58,31 @@ class TransactionRepository {
       return wrapper.data({ message: 'Balance updated successfully', items: newBalance });
     } catch (error) {
       await conn.rollback();
-      logger.log(ctx, error, "topUpUserBalance");
+      logger.log(ctx, error.message, "topUpUserBalance");
       return wrapper.error({ message: error.message, items: error });
+    } finally {
+      conn.release();
+    }
+  }
+
+  userTransaction = async (payload) => {
+    const ctx = `${this.ctx}.userTransaction`;
+    const conn = await this.db.getConnection();
+
+    const { userId, balance, transaction } = payload;
+    try {
+      await conn.beginTransaction();
+      let insertTransactionQuery = `INSERT INTO transactions (invoice_number, user_id, transaction_type, description, total_amount, created_on) VALUES (?, ?, ?, ?, ?, ?)`;
+      await conn.query(insertTransactionQuery, [transaction.invoiceNumber, userId, transaction.type, transaction.description, transaction.amount, transaction.createdOn]);
+
+      let updateBalanceQuery = `UPDATE users_balance SET balance = ? WHERE user_id = ?`;
+      await conn.query(updateBalanceQuery, [balance, userId]);
+      await conn.commit();
+      return wrapper.data();
+    } catch (error) {
+      await conn.rollback();
+      logger.log(ctx, error.message, "userTransaction");
+      return wrapper.error({ message: error.message });
     } finally {
       conn.release();
     }
